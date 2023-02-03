@@ -1,0 +1,75 @@
+---
+- name: Test ansible modules
+  hosts: all
+  remote_user: root 
+  tasks:
+    - name: Example form an Ansible Playbook
+      ping: 
+
+    - name: Install aptitude
+      apt:
+        name: aptitude
+        state: latest
+        update_cache: false
+
+    - name: Install required system packages
+      apt:
+        pkg:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+          - python3-pip
+          - virtualenv
+          - python3-setuptools
+        state: latest
+        update_cache: true
+      
+    - name: Add Docker GPG apt Key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker Repository
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu focal stable
+        state: present
+
+    - name: Update apt and install docker-ce
+      apt:
+        name: docker-ce
+        state: latest
+        update_cache: false
+
+    - name: Install Docker Module for Python
+      pip:
+        name: docker
+
+    - name: Defined '1' for net brigde
+      sysctl:
+        name: net.bridge.bridge-nf-call-iptables
+        value: '1'
+        sysctl_set: yes
+
+    - name: Disable SWAP since kubernetes can't work with swap enabled
+      shell: |
+        swapoff -a
+
+    - name: Install RKE
+      shell: |
+        wget https://github.com/rancher/rke/releases/download/v1.3.17/rke_linux-amd64
+        mv rke_linux-amd64 /usr/local/bin/rke
+        chmod +x /usr/local/bin/rke
+  
+    - name: Install HELM
+      shell: |
+        curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+        chmod 700 get_helm.sh
+        ./get_helm.sh
+
+    - name: Install Kubectl
+      snap:
+        name: kubectl 
+        classic: true
+        
+    
